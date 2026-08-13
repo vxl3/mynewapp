@@ -202,6 +202,12 @@ export function RegisterForm() {
           {t("common.login")}
         </Link>
       </p>
+
+      <p className="text-center text-sm text-muted-foreground">
+        <Link href="/register/business" className="font-medium text-primary hover:underline">
+          هل أنت صاحب نشاط تجاري؟ سجّل نشاطك هنا
+        </Link>
+      </p>
     </div>
   );
 }

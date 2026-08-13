@@ -7,7 +7,6 @@ import { cn } from "@/lib/utils";
 import { Logo } from "@/components/shared/logo";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { NavItem } from "@/components/dashboard/nav-config";
-import { useUiStore } from "@/store/ui-store";
 
 interface SidebarProps {
   items: NavItem[];

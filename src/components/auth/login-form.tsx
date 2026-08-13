@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { signIn } from "next-auth/react";
+import { signIn, getSession } from "next-auth/react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
@@ -14,6 +14,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Separator } from "@/components/ui/separator";
+import { GoogleIcon } from "@/components/auth/google-icon";
 import {
   Form,
   FormControl,
@@ -22,6 +24,8 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { registerDevice } from "@/lib/actions/profile";
+import { roleHome } from "@/config/roles";
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -42,6 +46,18 @@ export function LoginForm({ callbackUrl }: { callbackUrl?: string }) {
     defaultValues: { email: "", password: "", remember: false },
   });
 
+  const isSafeCallback = (url?: string) => url?.startsWith("/") && !url.startsWith("//");
+
+  async function onAuthenticated() {
+    const session = await getSession();
+    const home = roleHome(session?.user?.role);
+    // Track the connected device (best-effort).
+    void registerDevice();
+    const target = callbackUrl && isSafeCallback(callbackUrl) ? callbackUrl : home;
+    router.push(target);
+    router.refresh();
+  }
+
   async function onSubmit(values: LoginValues) {
     setSubmitting(true);
     try {
@@ -58,13 +74,16 @@ export function LoginForm({ callbackUrl }: { callbackUrl?: string }) {
       }
 
       toast.success(t("auth.welcomeBack"));
-      router.push(callbackUrl && callbackUrl.startsWith("/") ? callbackUrl : "/dashboard");
-      router.refresh();
+      await onAuthenticated();
     } catch {
       toast.error(t("auth.errorGeneric"));
     } finally {
       setSubmitting(false);
     }
+  }
+
+  async function onGoogle() {
+    await signIn("google", { callbackUrl: isSafeCallback(callbackUrl) ? callbackUrl : undefined });
   }
 
   return (
@@ -137,21 +156,14 @@ export function LoginForm({ callbackUrl }: { callbackUrl?: string }) {
               name="remember"
               render={({ field }) => (
                 <div className="flex items-center gap-2">
-                  <Checkbox
-                    id="remember"
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
+                  <Checkbox id="remember" checked={field.value} onCheckedChange={field.onChange} />
                   <Label htmlFor="remember" className="cursor-pointer text-sm font-normal">
                     {t("auth.rememberMe")}
                   </Label>
                 </div>
               )}
             />
-            <Link
-              href="/forgot-password"
-              className="text-sm font-medium text-primary hover:underline"
-            >
+            <Link href="/forgot-password" className="text-sm font-medium text-primary hover:underline">
               {t("auth.forgotPassword")}
             </Link>
           </div>
@@ -162,6 +174,17 @@ export function LoginForm({ callbackUrl }: { callbackUrl?: string }) {
           </Button>
         </form>
       </Form>
+
+      <div className="flex items-center gap-3">
+        <Separator className="flex-1" />
+        <span className="text-xs text-muted-foreground">أو / OR</span>
+        <Separator className="flex-1" />
+      </div>
+
+      <Button variant="outline" className="w-full" size="lg" onClick={onGoogle}>
+        <GoogleIcon className="h-4 w-4" />
+        Google
+      </Button>
 
       <p className="text-center text-sm text-muted-foreground">
         {t("auth.noAccount")}{" "}

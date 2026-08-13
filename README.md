@@ -1,11 +1,13 @@
-# احجزلي (Ahjezli) — Phase 1: Production Foundation
+# احجزلي (Ahjezli) — Phase 2: User Management & Dashboard Foundation
 
-منصة الحجز الذكية الأولى في العالم العربي — **أساس إنتاجي متكامل** (المرحلة الأولى).
-The smart booking platform for the Arab world — **complete production foundation (Phase 1)**.
+منصة الحجز الذكية الأولى في العالم العربي — **أساس إنتاجي متكامل** (المرحلتان 1 و 2).
+The smart booking platform for the Arab world — **complete production foundation (Phases 1 & 2)**.
 
-> This phase delivers architecture, authentication, database schema, routing, UI
-> system and reusable components. Booking business logic is intentionally deferred
-> to Phase 2, but the entire data model is already in place.
+> Phase 1 delivered architecture, schema, auth skeleton and UI system.
+> Phase 2 delivers the **complete user management system** and **functional
+> dashboards** for all three roles, wired to a real PostgreSQL database.
+> Booking business logic is intentionally deferred to Phase 3 — but every
+> model it needs is already in place.
 
 ---
 
@@ -122,6 +124,38 @@ Normalized PostgreSQL schema covering every future phase:
 
 ---
 
+## 👥 What Phase 2 adds
+
+**Authentication (complete)**
+- Register Customer / Business Owner (Super Admin is seed-only — never public)
+- Login / Logout with role-based redirects (Customer→`/dashboard`, Owner→`/business`, Admin→`/admin`)
+- Email verification, forgot/reset password, "remember me" (30-day session)
+- Account lockout after repeated failures, secure sessions, refresh-token rotation
+- Google OAuth (env-gated) + Apple & phone sign-in prepared at the schema level
+
+**User profile** — avatar, name, phone, country/city, address, bio, language,
+theme, notification settings, password change, connected devices/active sessions,
+and account-deletion requests.
+
+**Dashboards**
+- **Customer**: overview, profile, bookings (upcoming/history), favorites,
+  messages, notifications, coupons, loyalty, referral, settings, security
+- **Business**: overview, my businesses, business profile, branches, employees,
+  services, working hours, gallery, reviews, messages, statistics, subscription,
+  settings
+- **Admin**: overview, users, business owners, businesses, categories, cities,
+  countries, subscriptions, coupons, notifications (broadcast), reports,
+  audit logs, roles, permissions, languages, AI settings, system settings
+
+**Route protection** — guests redirected to sign-in; cross-role access returns a
+custom **403** page; dedicated **404** and **500** pages.
+
+**Validation** — Zod schemas shared between React Hook Form (client) and server
+actions (server), with professional messages.
+
+**Database** — new `Device`, `Favorite` and `AccountDeletionRequest` models plus
+profile fields on `User`; everything normalized, no duplicated models.
+
 ## 🔐 Security (OWASP-aligned)
 
 - **Secure headers** — CSP, HSTS, `X-Frame-Options: DENY`, nosniff, Referrer-Policy
@@ -155,11 +189,12 @@ Android & iOS clients (JWT access + refresh tokens already implemented).
 
 ---
 
-## 📌 Roadmap (next phases)
+## 📌 Roadmap
 
-- **Phase 2** — booking engine, business onboarding, realtime (Socket.IO)
-- **Phase 3** — payments, invoicing, AI assistant, loyalty automation
-- **Phase 4** — mobile apps, marketplace features, analytics suite
+- ✅ **Phase 1** — architecture, schema, auth skeleton, UI system, landing page
+- ✅ **Phase 2** — user management, complete auth, functional dashboards, RBAC, admin
+- ⏭ **Phase 3** — business management & booking system, realtime (Socket.IO)
+- ⏭ **Phase 4** — payments, invoicing, AI assistant, loyalty automation, mobile apps
 
 ---
 

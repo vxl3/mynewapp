@@ -8,22 +8,13 @@ import { slidingWindowRateLimit } from "@/lib/rate-limit";
  *
  * Responsibilities:
  *  - Protect role-scoped routes (customer / business / admin).
- *  - Redirect unauthenticated users to the sign-in page.
- *  - Apply a lightweight sliding-window rate limit to auth endpoints
- *    (defense in depth against credential stuffing / abuse).
+ *  - Redirect guests to sign-in (preserving the destination).
+ *  - Redirect authenticated users to a custom 403 page on role mismatch.
+ *  - Keep authenticated users out of the auth pages (login/register).
+ *  - Apply a sliding-window rate limit to auth endpoints.
  */
 
-const PUBLIC_PATHS = ["/login", "/register", "/forgot-password", "/reset-password", "/verify-email"];
-
-function isPublicPath(pathname: string) {
-  return PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
-}
-
-async function redirectToLogin(req: NextRequest, callbackUrl: string) {
-  const url = new URL("/login", req.url);
-  url.searchParams.set("callbackUrl", callbackUrl);
-  return NextResponse.redirect(url);
-}
+const AUTH_PAGES = ["/login", "/register", "/forgot-password", "/reset-password"];
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
@@ -41,8 +32,14 @@ export async function middleware(req: NextRequest) {
   }
 
   const token = await getToken({ req, secret: process.env.AUTH_SECRET });
-  const roles: string[] = (token?.roles as string[]) ?? [];
   const primaryRole = token?.role as RoleName | undefined;
+  const isAuthenticated = Boolean(token);
+
+  // Authenticated users should not sit on auth pages → send them home.
+  if (isAuthenticated && AUTH_PAGES.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
+    const home = roleRouteMap[primaryRole as RoleName]?.[0] ?? "/dashboard";
+    return NextResponse.redirect(new URL(home, req.url));
+  }
 
   const isProtected =
     pathname.startsWith("/dashboard") ||
@@ -51,10 +48,12 @@ export async function middleware(req: NextRequest) {
 
   if (!isProtected) return NextResponse.next();
 
-  // Not authenticated → sign in, preserving the intended destination.
-  if (!token) return redirectToLogin(req, pathname);
+  if (!token) {
+    const url = new URL("/login", req.url);
+    url.searchParams.set("callbackUrl", pathname);
+    return NextResponse.redirect(url);
+  }
 
-  // Resolve which namespace is being requested.
   const namespace = pathname.startsWith("/admin")
     ? "/admin"
     : pathname.startsWith("/business")
@@ -65,12 +64,9 @@ export async function middleware(req: NextRequest) {
     primaryRole && roleRouteMap[primaryRole]?.some((prefix) => namespace.startsWith(prefix));
 
   if (!allowed) {
-    // Authenticated but insufficient role → route to their home dashboard.
-    const fallback = roleRouteMap[primaryRole as RoleName]?.[0] ?? "/dashboard";
-    return NextResponse.redirect(new URL(fallback, req.url));
+    return NextResponse.redirect(new URL("/403", req.url));
   }
 
-  void roles;
   return NextResponse.next();
 }
 
@@ -79,6 +75,10 @@ export const config = {
     "/dashboard/:path*",
     "/business/:path*",
     "/admin/:path*",
+    "/login",
+    "/register/:path*",
+    "/forgot-password",
+    "/reset-password",
     "/api/auth/:path*",
   ],
 };

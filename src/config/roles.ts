@@ -96,3 +96,15 @@ export function resolvePrimaryRole(roles: string[]): RoleName | null {
   if (roles.includes(RoleName.CUSTOMER)) return RoleName.CUSTOMER;
   return null;
 }
+
+/** Dashboard home path for a given role (client- and server-safe). */
+export function roleHome(role?: string | null): string {
+  switch (role) {
+    case RoleName.SUPER_ADMIN:
+      return "/admin";
+    case RoleName.BUSINESS_OWNER:
+      return "/business";
+    default:
+      return "/dashboard";
+  }
+}

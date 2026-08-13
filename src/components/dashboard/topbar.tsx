@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { LanguageSwitcher } from "@/components/shared/language-switcher";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { UserMenu } from "@/components/dashboard/user-menu";
-import { useUiStore } from "@/store/ui-store";
+import { NotificationBell } from "@/components/dashboard/notification-bell";
 
 interface TopbarProps {
   onOpenMobileNav: () => void;
@@ -31,6 +31,7 @@ export function Topbar({ onOpenMobileNav }: TopbarProps) {
       <div className="ms-auto flex items-center gap-1.5">
         <LanguageSwitcher />
         <ThemeToggle />
+        <NotificationBell />
         <UserMenu />
       </div>
     </header>
