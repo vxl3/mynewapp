@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Logo } from "@/components/shared/logo";
 import { LanguageSwitcher } from "@/components/shared/language-switcher";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
+import { ensureSeeded } from "@/lib/bootstrap";
 
 export const metadata: Metadata = {
   title: "Authentication",
@@ -12,7 +13,11 @@ export const metadata: Metadata = {
  * Shared layout for authentication pages — centered glass card over a
  * gradient mesh backdrop, with language + theme controls pinned top-end.
  */
-export default function AuthLayout({ children }: { children: React.ReactNode }) {
+export default async function AuthLayout({ children }: { children: React.ReactNode }) {
+  // First-run provisioning: seeds roles, permissions and the super-admin
+  // account when the database is empty (idempotent, cached per instance).
+  await ensureSeeded();
+
   return (
     <div className="bg-mesh relative flex min-h-screen flex-col">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
