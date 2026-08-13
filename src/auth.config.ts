@@ -3,7 +3,7 @@ import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import { z } from "zod";
 import { RoleName, resolvePrimaryRole } from "@/config/roles";
-import { MAX_LOGIN_ATTEMPTS, LOCK_DURATION_MS } from "@/lib/security";
+import { MAX_LOGIN_ATTEMPTS, LOCK_DURATION_MS } from "@/lib/constants";
 
 /**
  * احجزلي — Auth.js configuration (edge-safe, split config).

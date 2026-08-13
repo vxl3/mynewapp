@@ -1,14 +1,13 @@
 import { hash, compare } from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { BCRYPT_ROUNDS, MAX_LOGIN_ATTEMPTS, LOCK_DURATION_MS } from "@/lib/constants";
 
 /**
  * Security primitives — password hashing (bcrypt), JWT access/refresh
  * token issuance and verification, and light input sanitization.
  */
 
-export const BCRYPT_ROUNDS = 12;
-export const MAX_LOGIN_ATTEMPTS = 5;
-export const LOCK_DURATION_MS = 15 * 60 * 1000; // 15 minutes
+export { MAX_LOGIN_ATTEMPTS, LOCK_DURATION_MS };
 
 /** Hash a plaintext password. */
 export async function hashPassword(password: string): Promise<string> {
