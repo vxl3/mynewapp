@@ -1,10 +1,15 @@
+import NextAuth from "next-auth";
 import { NextResponse, type NextRequest } from "next/server";
-import { getToken } from "next-auth/jwt";
+import { authConfig } from "@/auth.config";
 import { RoleName, roleRouteMap } from "@/config/roles";
 import { slidingWindowRateLimit } from "@/lib/rate-limit";
 
 /**
- * احجزلي — Edge middleware.
+ * احجزلي — Edge middleware (route protection).
+ *
+ * Uses the official Auth.js middleware wrapper, which reads the same
+ * `AUTH_SECRET` and session cookie as the Node runtime, so sessions decode
+ * correctly on Vercel's Edge network.
  *
  * Responsibilities:
  *  - Protect role-scoped routes (customer / business / admin).
@@ -14,9 +19,21 @@ import { slidingWindowRateLimit } from "@/lib/rate-limit";
  *  - Apply a sliding-window rate limit to auth endpoints.
  */
 
+const { auth } = NextAuth(authConfig);
+
 const AUTH_PAGES = ["/login", "/register", "/forgot-password", "/reset-password"];
 
-export async function middleware(req: NextRequest) {
+type AuthedRequest = NextRequest & {
+  auth: {
+    user?: {
+      id?: string;
+      role?: RoleName;
+      roles?: string[];
+    };
+  } | null;
+};
+
+export default auth((req) => {
   const { pathname } = req.nextUrl;
 
   // --- Rate limiting for auth endpoints ---
@@ -31,12 +48,11 @@ export async function middleware(req: NextRequest) {
     }
   }
 
-  const token = await getToken({ req, secret: process.env.AUTH_SECRET });
-  const primaryRole = token?.role as RoleName | undefined;
-  const isAuthenticated = Boolean(token);
+  const session = (req as AuthedRequest).auth;
+  const primaryRole = session?.user?.role;
 
   // Authenticated users should not sit on auth pages → send them home.
-  if (isAuthenticated && AUTH_PAGES.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
+  if (session && AUTH_PAGES.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
     const home = roleRouteMap[primaryRole as RoleName]?.[0] ?? "/dashboard";
     return NextResponse.redirect(new URL(home, req.url));
   }
@@ -48,7 +64,7 @@ export async function middleware(req: NextRequest) {
 
   if (!isProtected) return NextResponse.next();
 
-  if (!token) {
+  if (!session) {
     const url = new URL("/login", req.url);
     url.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(url);
@@ -68,7 +84,7 @@ export async function middleware(req: NextRequest) {
   }
 
   return NextResponse.next();
-}
+});
 
 export const config = {
   matcher: [
