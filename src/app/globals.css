@@ -1,0 +1,155 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   احجزلي — Design tokens (luxury / glassmorphism)
+   ============================================================ */
+
+@layer base {
+  :root {
+    --background: 240 20% 99%;
+    --foreground: 240 15% 8%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 15% 8%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 15% 8%;
+    --primary: 258 88% 58%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 8% 95%;
+    --secondary-foreground: 240 12% 18%;
+    --muted: 240 8% 95%;
+    --muted-foreground: 240 6% 46%;
+    --accent: 258 60% 96%;
+    --accent-foreground: 258 60% 35%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 240 10% 90%;
+    --input: 240 10% 88%;
+    --ring: 258 88% 58%;
+    --radius: 0.9rem;
+
+    --glass: 255 255 255;
+    --glass-alpha: 0.62;
+    --glow: 258 88% 58%;
+  }
+
+  .dark {
+    --background: 250 30% 6%;
+    --foreground: 240 15% 96%;
+    --card: 250 25% 9%;
+    --card-foreground: 240 15% 96%;
+    --popover: 250 28% 10%;
+    --popover-foreground: 240 15% 96%;
+    --primary: 258 88% 66%;
+    --primary-foreground: 250 30% 6%;
+    --secondary: 250 20% 15%;
+    --secondary-foreground: 240 15% 92%;
+    --muted: 250 20% 14%;
+    --muted-foreground: 240 8% 62%;
+    --accent: 258 40% 20%;
+    --accent-foreground: 258 80% 85%;
+    --destructive: 0 70% 55%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 250 18% 18%;
+    --input: 250 18% 20%;
+    --ring: 258 88% 66%;
+
+    --glass: 20 20 30;
+    --glass-alpha: 0.5;
+    --glow: 258 90% 70%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    -webkit-tap-highlight-color: transparent;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "ss01", "cv01", "cv11";
+    text-rendering: optimizeLegibility;
+  }
+
+  html[lang="ar"] body,
+  html[dir="rtl"] body {
+    letter-spacing: 0;
+  }
+
+  ::selection {
+    background: hsl(var(--primary) / 0.2);
+  }
+}
+
+@layer utilities {
+  /* Glassmorphism surfaces */
+  .glass {
+    background: rgb(var(--glass) / var(--glass-alpha));
+    backdrop-filter: blur(18px) saturate(160%);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+    border: 1px solid rgb(var(--glass) / 0.12);
+  }
+
+  .glass-strong {
+    background: rgb(var(--glass) / 0.85);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid rgb(var(--glass) / 0.16);
+  }
+
+  .text-gradient {
+    background: linear-gradient(
+      120deg,
+      hsl(var(--primary)),
+      hsl(281 85% 60%),
+      hsl(318 85% 60%)
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+
+  .bg-mesh {
+    background:
+      radial-gradient(at 12% 8%, hsl(var(--glow) / 0.16) 0px, transparent 50%),
+      radial-gradient(at 88% 12%, hsl(318 85% 60% / 0.14) 0px, transparent 50%),
+      radial-gradient(at 70% 85%, hsl(200 85% 60% / 0.12) 0px, transparent 50%),
+      hsl(var(--background));
+  }
+
+  .card-hover {
+    transition:
+      transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 0.3s ease;
+  }
+  .card-hover:hover {
+    transform: translateY(-4px);
+    box-shadow:
+      0 18px 40px -18px hsl(var(--glow) / 0.35),
+      0 8px 20px -12px rgb(0 0 0 / 0.12);
+  }
+
+  .skeleton-shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+  .skeleton-shimmer::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(
+      90deg,
+      transparent,
+      hsl(var(--foreground) / 0.06),
+      transparent
+    );
+    animation: shimmer 1.8s infinite;
+  }
+}
